@@ -35,3 +35,20 @@ def main():
                 w.writerow([written + i, int(mids[i]), CATEGORIES[cats[i]],
                             amt[i], int(fraud[i])])
             written += n
+
+    # a small dimension table to demonstrate a broadcast join
+    dim = DATA / "merchants.csv"
+    with dim.open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["merchant_id", "region", "risk_tier"])
+        for mid in range(5000):
+            w.writerow([mid, rng.choice(["N", "S", "E", "W"]),
+                        int(rng.integers(1, 4))])
+
+    mb = fact.stat().st_size / 1e6
+    print(f"Wrote {ROWS:,} transactions ({mb:.1f} MB) -> data/transactions.csv")
+    print("Wrote 5,000 merchants -> data/merchants.csv")
+
+
+if __name__ == "__main__":
+    main()
