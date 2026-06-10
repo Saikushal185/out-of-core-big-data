@@ -17,3 +17,21 @@ CATEGORIES = ["grocery", "electronics", "fuel", "dining", "travel", "health"]
 CHUNK = 100_000
 
 
+def main():
+    DATA.mkdir(exist_ok=True)
+    rng = np.random.default_rng(0)
+    fact = DATA / "transactions.csv"
+    with fact.open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["txn_id", "merchant_id", "category", "amount", "is_fraud"])
+        written = 0
+        while written < ROWS:
+            n = min(CHUNK, ROWS - written)
+            mids = rng.integers(0, 5000, n)
+            cats = rng.integers(0, len(CATEGORIES), n)
+            amt = np.round(rng.gamma(2.0, 25.0, n), 2)
+            fraud = (rng.random(n) < 0.012).astype(int)
+            for i in range(n):
+                w.writerow([written + i, int(mids[i]), CATEGORIES[cats[i]],
+                            amt[i], int(fraud[i])])
+            written += n
