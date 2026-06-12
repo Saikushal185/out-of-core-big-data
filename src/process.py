@@ -43,3 +43,25 @@ def naive_full_load():
 
 def streaming():
     return (LazyPipeline(FACT, chunksize=CHUNK, usecols=["category", "amount"])
+            .groupby_agg("category", "amount"))
+
+
+def main():
+    REPORTS.mkdir(exist_ok=True)
+    full, t_full, m_full = measure(naive_full_load)
+    strm, t_strm, m_strm = measure(streaming)
+
+    # correctness: totals must match
+    match = bool(abs(full["sum"].sum() - strm["sum"].sum()) < 1e-3)
+
+    # a join the streaming way (per-region fraud-amount aggregate)
+    join_out, t_join, m_join = measure(
+        lambda: broadcast_join_agg(FACT, DATA / "merchants.csv",
+                                   "merchant_id", "region", "amount", CHUNK))
+
+    metrics = {
+        "rows": int(full["count"].sum()),
+        "full_load": {"seconds": round(t_full, 2), "peak_mb": round(m_full, 1)},
+        "streaming": {"seconds": round(t_strm, 2), "peak_mb": round(m_strm, 1)},
+        "broadcast_join": {"seconds": round(t_join, 2), "peak_mb": round(m_join, 1)},
+        "results_match": match,
