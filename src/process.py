@@ -65,3 +65,25 @@ def main():
         "streaming": {"seconds": round(t_strm, 2), "peak_mb": round(m_strm, 1)},
         "broadcast_join": {"seconds": round(t_join, 2), "peak_mb": round(m_join, 1)},
         "results_match": match,
+        "memory_reduction_x": round(m_full / max(m_strm, 1e-6), 1),
+    }
+    (REPORTS / "metrics.json").write_text(json.dumps(metrics, indent=2))
+
+    fig, ax = plt.subplots(figsize=(6.5, 4))
+    names = ["full load", "streaming", "broadcast join"]
+    mem = [m_full, m_strm, m_join]
+    ax.bar(names, mem, color=["#e76f51", "#2a9d8f", "#264653"])
+    ax.set_ylabel("peak memory (MB)")
+    ax.set_title(f"Peak memory: streaming holds ~{metrics['memory_reduction_x']}x less\n"
+                 f"({metrics['rows']:,} rows, results match = {match})")
+    fig.tight_layout(); fig.savefig(REPORTS / "memory.png", dpi=110)
+
+    print(f"rows={metrics['rows']:,}  results_match={match}")
+    print(f"full   : {t_full:.2f}s  peak {m_full:.1f} MB")
+    print(f"stream : {t_strm:.2f}s  peak {m_strm:.1f} MB  ({metrics['memory_reduction_x']}x less)")
+    print(f"join   : {t_join:.2f}s  peak {m_join:.1f} MB")
+    print("See reports/memory.png and reports/metrics.json")
+
+
+if __name__ == "__main__":
+    main()
