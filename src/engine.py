@@ -16,3 +16,21 @@ def stream(path, chunksize=200_000, usecols=None):
     for chunk in pd.read_csv(path, chunksize=chunksize, usecols=usecols):
         yield chunk
 
+
+class LazyPipeline:
+    """Records map/filter steps; executes them chunk-by-chunk on collect()."""
+    def __init__(self, path, chunksize=200_000, usecols=None):
+        self.path, self.chunksize, self.usecols = path, chunksize, usecols
+        self.ops = []
+
+    def filter(self, fn):
+        self.ops.append(("filter", fn)); return self
+
+    def assign(self, **kwargs):
+        self.ops.append(("assign", kwargs)); return self
+
+    def _apply(self, chunk):
+        for kind, payload in self.ops:
+            if kind == "filter":
+                chunk = chunk[payload(chunk)]
+            elif kind == "assign":
