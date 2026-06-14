@@ -52,3 +52,20 @@ class LazyPipeline:
               "mean": v[0] / v[1] if v[1] else 0.0} for k, v in acc.items()]
         ).sort_values(key).reset_index(drop=True)
         return out[[key] + list(aggs) + (["mean"] if "mean" not in aggs else [])]
+
+
+def broadcast_join_agg(fact_path, dim_path, join_key, group_key, value,
+                       chunksize=200_000):
+    """Join each streamed fact chunk to an in-memory dim table, then aggregate."""
+    dim = pd.read_csv(dim_path).set_index(join_key)
+    acc = {}
+    for chunk in stream(fact_path, chunksize):
+        merged = chunk.join(dim, on=join_key)
+        g = merged.groupby(group_key)[value].agg(["sum", "count"])
+        for k, row in g.iterrows():
+            acc.setdefault(k, [0.0, 0])
+            acc[k][0] += row["sum"]; acc[k][1] += int(row["count"])
+    return pd.DataFrame(
+        [{group_key: k, "sum": v[0], "count": v[1],
+          "mean": v[0] / v[1]} for k, v in acc.items()]
+    ).sort_values(group_key).reset_index(drop=True)
