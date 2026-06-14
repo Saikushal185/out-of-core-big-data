@@ -1,0 +1,22 @@
+HOW TO RUN — Out-of-Core / Big-Data Processing
+==============================================
+
+1. Install dependencies:
+       pip install -r requirements.txt
+
+2. Generate the large fact table (default 1.5M rows; set BIGDATA_ROWS to scale):
+       python3 src/generate_data.py
+       # or:  BIGDATA_ROWS=10000000 python3 src/generate_data.py
+
+3. Process it out-of-core and benchmark vs naive full-load:
+       python3 src/process.py
+
+Outputs:
+   reports/memory.png    — peak memory: full-load vs streaming vs join
+   reports/metrics.json  — time + peak MB per method, correctness check
+
+Or just run everything:  ./run.sh
+
+Note: implements the patterns Spark/Dask automate — chunked streaming, a lazy
+pipeline, map-reduce groupby, and a broadcast join — in plain pandas, so peak
+memory stays flat as the file grows. The production swap is PySpark or Dask.
