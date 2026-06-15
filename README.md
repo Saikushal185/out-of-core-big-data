@@ -39,3 +39,23 @@ Identical results, ~9× lower peak memory — and the gap widens as the file gro
 
 ## Project structure
 ```
+out-of-core-big-data/
+├── data/                  # transactions.csv (large), merchants.csv (generated)
+├── src/
+│   ├── generate_data.py   # chunked writer for the fact + dim tables
+│   ├── engine.py          # out-of-core primitives
+│   └── process.py         # benchmark + plots
+├── reports/               # memory.png, metrics.json
+├── requirements.txt
+├── torun.txt
+└── license.md
+```
+
+## Run it
+```bash
+./run.sh        # or see torun.txt
+```
+
+**Production swap**: the streaming groupby, lazy plan, and broadcast join map
+one-to-one onto PySpark/Dask DataFrames — there the engine handles partitioning,
+spill-to-disk, and distribution across a cluster for you.
