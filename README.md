@@ -59,3 +59,7 @@ out-of-core-big-data/
 **Production swap**: the streaming groupby, lazy plan, and broadcast join map
 one-to-one onto PySpark/Dask DataFrames — there the engine handles partitioning,
 spill-to-disk, and distribution across a cluster for you.
+
+## Reproducibility
+
+This project is fully reproducible offline via the included synthetic data generator.
